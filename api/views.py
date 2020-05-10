@@ -10,6 +10,6 @@ class UserList(Resource):
 
 class User(Resource):
     def get(self, user_id=None):
-        return {"get": ""}
+        return {"get": user_id}
     def post(self, user_id=None):
-        return {"post":""}
+        return {"post":user_id}
