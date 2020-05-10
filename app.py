@@ -9,7 +9,7 @@ app = Flask(__name__)
 flask_register_module_as_config(app, config)
 api = Api(app)
 api.add_resource(User, '/user/<string:user_id>')
-api.add_resource(User, '/user/<int:user_id>')
+api.add_resource(UserList, '/user/')
 print(app.url_map)
 
 @app.errorhandler(404)
