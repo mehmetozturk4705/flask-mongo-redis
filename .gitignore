@@ -1,0 +1,10 @@
+venv
+.idea
+**/__pycache__
+.env
+.env.docker
+.env.production
+wslenv
+tmp
+logs
+.databaseenv

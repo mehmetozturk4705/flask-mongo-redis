@@ -1,0 +1,64 @@
+version: '3.3'
+services:
+    web:
+        build: .
+        image: newsapp
+        command: gunicorn -b 0.0.0.0:8000 wsgi:app -w 4 --timeout 300 -t 80
+        restart: unless-stopped
+        tty: true
+        env_file:
+            - ./.env.docker
+        networks:
+            - app-network
+        depends_on:
+            - mongodb
+            - redis
+    webserver:
+        image: nginx:alpine
+        container_name: webserver
+        restart: unless-stopped
+        tty: true
+        ports:
+            - "80:80"
+            - "443:443"
+        volumes:
+            - ./static/:/var/www/static/
+            - ./conf/nginx/:/etc/nginx/conf.d/
+            - webserver-logs:/var/log/nginx/
+        networks:
+            - app-network
+        depends_on:
+          - web
+    redis:
+        image: "redis:5.0.8"
+        restart: unless-stopped
+        command:  [ "redis-server", "/redis.conf" ]
+        working_dir: /var/lib/redis
+        ports:
+            - "6379:6379"
+        volumes:
+            - ./conf/redis/redis.conf:/redis.conf
+            - redis-data:/var/lib/redis/
+        networks:
+            - app-network
+    mongodb:
+        image: mongo:latest
+        environment:
+            MONGO_INITDB_ROOT_USERNAME: root
+            MONGO_INITDB_ROOT_PASSWORD: root
+        ports:
+            - 27017:27017
+        volumes:
+            - mongodb_data:/data/db
+        networks:
+            - app-network
+#Docker Networks
+networks:
+    app-network:
+        driver: bridge
+
+volumes:
+    database-data:
+    webserver-logs:
+    redis-data:
+    mongodb_data:
