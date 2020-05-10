@@ -3,7 +3,7 @@ services:
     web:
         build: .
         image: newsapp
-        command: gunicorn -b 0.0.0.0:8000 wsgi:app -w 4 --timeout 300 -t 80
+        command: "gunicorn -b 0.0.0.0:8000 wsgi:app -w 4 --timeout 300 -t 80"
         restart: unless-stopped
         tty: true
         env_file:
@@ -43,11 +43,10 @@ services:
             - app-network
     mongodb:
         image: mongo:latest
-        environment:
-            MONGO_INITDB_ROOT_USERNAME: root
-            MONGO_INITDB_ROOT_PASSWORD: root
+        env_file:
+            - ./.databaseenv
         ports:
-            - 27017:27017
+            - "27017:27017"
         volumes:
             - mongodb_data:/data/db
         networks:
