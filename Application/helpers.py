@@ -3,10 +3,12 @@ from werkzeug.http import HTTP_STATUS_CODES
 from werkzeug.exceptions import HTTPException
 from flask_restful import Api
 from mongoengine.errors import NotUniqueError, ValidationError as ModelValidationError
-from api.exceptions import PasswordValidationError
+from api.exceptions import PasswordValidationError, AuthenticationFailedError
 from jsonschema.exceptions import ValidationError
 from flask_caching import Cache
 from Application import config
+from flask_jwt_extended import exceptions as jwt_extended_errs
+from jwt import exceptions as jwt_errs
 import re
 
 def flask_register_module_as_config(app:Flask, module):
@@ -32,17 +34,26 @@ class ExtendedAPI(Api):
         # Handle HTTPExceptions
         if isinstance(err, HTTPException):
             return jsonify({
-                    'message': getattr(
+                    'detail': getattr(
                         err, 'description', HTTP_STATUS_CODES.get(err.code, '')
                     )
                 }), err.code
         #Handle validation error
         if isinstance(err, ValidationError) or isinstance(err, ModelValidationError) or isinstance(err, PasswordValidationError):
             return jsonify({
-                'message': getattr(
+                'detail': getattr(
                     err, 'description', str(err)
                 )
             }), 400
+        #Handle authorization issues
+        jwt_err_types = list(map(lambda ty: getattr(jwt_errs, ty), filter(lambda x: not x.startswith("__"), dir(jwt_errs))))
+        jwt_extended_err_types = list(map(lambda ty: getattr(jwt_extended_errs, ty), filter(lambda x: not x.startswith("__"), dir(jwt_extended_errs))))
+        if type(err) in jwt_err_types+jwt_extended_err_types+[AuthenticationFailedError]:
+            return jsonify({
+                'detail': getattr(
+                    err, 'description', str(err)
+                )
+            }), 401
 
         #Handle duplication
         if isinstance(err, NotUniqueError):
@@ -51,7 +62,7 @@ class ExtendedAPI(Api):
             print(type(m[0]))
             str(err)
             return jsonify({
-                'message': getattr(
+                'detail': getattr(
                     err, 'description', f"There is a unique constraint violation. {m[0] if len(m)>0 else ''}"
                 )
             }), 400

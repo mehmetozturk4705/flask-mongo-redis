@@ -10,16 +10,18 @@ from database.db import initialize_db
 app = Flask(__name__)
 bcrypt = Bcrypt(app)
 jwt = JWTManager(app)
+def init_paths(api_obj):
+    api_obj.add_resource(User, '/user/<string:user_id>/', strict_slashes=False)
+    api_obj.add_resource(UserList, '/user/', strict_slashes=False)
+    api_obj.add_resource(ChangePassword, '/changepassword/', strict_slashes=False)
+    api_obj.add_resource(Login, '/login/', strict_slashes=False)
 
 ApplicationHelper.get_application_cache().init_app(app)
 ApplicationHelper.get_application_cache().clear()
 flask_register_module_as_config(app, config)
 api = ExtendedAPI(app)
 initialize_db(app)
-api.add_resource(User, '/user/<string:user_id>/', strict_slashes=False)
-api.add_resource(UserList, '/user/', strict_slashes=False)
-api.add_resource(ChangePassword, '/changepassword/', strict_slashes=False)
-api.add_resource(Login, '/login/', strict_slashes=False)
+init_paths(api)
 
 @app.errorhandler(404)
 @app.errorhandler(405)
